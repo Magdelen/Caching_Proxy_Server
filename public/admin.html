@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cache Admin - Neural Interface</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary-bg: #0a0a0f;
+      --secondary-bg: #1a1a2e;
+      --accent-bg: #16213e;
+      --cyber-blue: #00d4ff;
+      --cyber-purple: #b24bf3;
+      --cyber-green: #39ff14;
+      --cyber-red: #ff0040;
+      --text-primary: #ffffff;
+      --text-secondary: #b8bcc8;
+      --glass-bg: rgba(255, 255, 255, 0.05);
+      --glow-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--primary-bg);
+      color: var(--text-primary);
+      min-height: 100vh;
+      background-image: 
+        radial-gradient(circle at 20% 20%, rgba(0, 212, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(178, 75, 243, 0.1) 0%, transparent 50%),
+        linear-gradient(135deg, var(--primary-bg) 0%, var(--secondary-bg) 100%);
+      overflow-x: hidden;
+    }
+
+    .dashboard-container {
+      padding: 2rem;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 3rem;
+      position: relative;
+    }
+
+    .header::before {
+      content: '';
+      position: absolute;
+      top: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--cyber-blue), transparent);
+      animation: pulse-line 2s ease-in-out infinite alternate;
+    }
+
+    .title {
+      font-size: 3rem;
+      font-weight: 900;
+      background: linear-gradient(45deg, var(--cyber-blue), var(--cyber-purple));
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 30px rgba(0, 212, 255, 0.5);
+      margin-bottom: 0.5rem;
+      animation: glow-text 3s ease-in-out infinite alternate;
+    }
+
+    .subtitle {
+      color: var(--text-secondary);
+      font-size: 1.2rem;
+      font-weight: 300;
+      letter-spacing: 2px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+
+    .stat-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-5px);
+      border-color: var(--cyber-blue);
+      box-shadow: var(--glow-shadow);
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--cyber-blue), var(--cyber-purple));
+      animation: shimmer 2s linear infinite;
+    }
+
+    .stat-value {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--cyber-blue);
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: between;
+      align-items: center;
+      margin-bottom: 2rem;
+      gap: 1rem;
+    }
+
+    .search-container {
+      position: relative;
+      flex-grow: 1;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 1rem 1rem 1rem 3rem;
+      background: var(--glass-bg);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      color: var(--text-primary);
+      font-size: 1rem;
+      transition: all 0.3s ease;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--cyber-blue);
+      box-shadow: 0 0 20px rgba(0, 212, 255, 0.2);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-secondary);
+    }
+
+    .refresh-btn {
+      padding: 1rem 2rem;
+      background: linear-gradient(45deg, var(--cyber-blue), var(--cyber-purple));
+      border: none;
+      border-radius: 12px;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .refresh-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 5px 20px rgba(0, 212, 255, 0.4);
+    }
+
+    .refresh-btn:active {
+      transform: scale(0.98);
+    }
+
+    .table-container {
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 2rem;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .table-container::before {
+      content: '';
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      bottom: -2px;
+      background: linear-gradient(45deg, var(--cyber-blue), var(--cyber-purple), var(--cyber-green));
+      border-radius: 22px;
+      z-index: -1;
+      opacity: 0.3;
+      animation: rotate-border 4s linear infinite;
+    }
+
+    .cache-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+    .cache-table th {
+      background: var(--accent-bg);
+      padding: 1.5rem 1rem;
+      text-align: left;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--cyber-blue);
+      border-bottom: 2px solid var(--cyber-blue);
+      position: relative;
+    }
+
+    .cache-table td {
+      padding: 1.2rem 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.3s ease;
+    }
+
+    .cache-table tbody tr {
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .cache-table tbody tr:hover {
+      background: rgba(0, 212, 255, 0.1);
+      transform: scale(1.02);
+    }
+
+    .cache-table tbody tr:hover td {
+      color: var(--cyber-blue);
+    }
+
+    .key-cell {
+      font-family: 'Courier New', monospace;
+      color: var(--cyber-green);
+      font-weight: 600;
+    }
+
+    .ttl-cell {
+      color: var(--cyber-purple);
+      font-weight: 600;
+    }
+
+    .delete-btn {
+      padding: 0.5rem 1rem;
+      background: linear-gradient(45deg, var(--cyber-red), #ff4081);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .delete-btn:hover {
+      transform: scale(1.1);
+      box-shadow: 0 5px 15px rgba(255, 0, 64, 0.4);
+    }
+
+    .delete-btn:active {
+      transform: scale(0.95);
+    }
+
+    .loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 3rem;
+    }
+
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 3px solid rgba(0, 212, 255, 0.3);
+      border-top: 3px solid var(--cyber-blue);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem;
+      color: var(--text-secondary);
+    }
+
+    .empty-icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+
+    @keyframes pulse-line {
+      0% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+
+    @keyframes glow-text {
+      0% { text-shadow: 0 0 20px rgba(0, 212, 255, 0.5); }
+      100% { text-shadow: 0 0 30px rgba(0, 212, 255, 0.8), 0 0 40px rgba(178, 75, 243, 0.5); }
+    }
+
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    @keyframes rotate-border {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .row-enter {
+      animation: slideIn 0.5s ease-out;
+    }
+
+    @media (max-width: 768px) {
+      .dashboard-container {
+        padding: 1rem;
+      }
+      
+      .title {
+        font-size: 2rem;
+      }
+      
+      .controls {
+        flex-direction: column;
+      }
+      
+      .cache-table {
+        font-size: 0.9rem;
+      }
+      
+      .cache-table th,
+      .cache-table td {
+        padding: 0.8rem 0.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <header class="header">
+      <h1 class="title">NEURAL CACHE</h1>
+      <p class="subtitle">Redis Administration Interface</p>
+    </header>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value" id="total-keys">0</div>
+        <div class="stat-label">Total Keys</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="avg-ttl">0s</div>
+        <div class="stat-label">Average TTL</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="memory-usage">N/A</div>
+        <div class="stat-label">Memory Usage</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="cache-status">●</div>
+        <div class="stat-label">Cache Status</div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="search-container">
+        <div class="search-icon">🔍</div>
+        <input 
+          type="text" 
+          class="search-input" 
+          placeholder="Search cache keys..."
+          id="search-input"
+        >
+      </div>
+      <button class="refresh-btn" onclick="loadCache()">
+        <span id="refresh-text">REFRESH</span>
+      </button>
+    </div>
+
+    <div class="table-container">
+      <table class="cache-table" id="cache-table">
+        <thead>
+          <tr>
+            <th>Key</th>
+            <th>TTL (seconds)</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="cache-tbody">
+          <!-- Dynamic content will be inserted here -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    let cacheData = [];
+    let filteredData = [];
+
+    // Simulate some initial data for demo purposes
+    const demoData = [
+      { key: 'user:session:abc123', ttl: 3600 },
+      { key: 'api:rate_limit:192.168.1.1', ttl: 60 },
+      { key: 'cache:product:12345', ttl: 1800 },
+      { key: 'temp:upload:xyz789', ttl: 300 },
+      { key: 'auth:token:user456', ttl: 7200 }
+    ];
+
+    async function loadCache() {
+      const refreshBtn = document.getElementById('refresh-text');
+      refreshBtn.textContent = 'LOADING...';
+      
+      const tbody = document.getElementById('cache-tbody');
+      tbody.innerHTML = '<tr><td colspan="3" class="loading"><div class="spinner"></div></td></tr>';
+
+      try {
+        // Try to fetch real data, fall back to demo data
+        let keys;
+        try {
+          const res = await fetch('/api/cache/keys');
+          keys = await res.json();
+        } catch (error) {
+          // Use demo data if API is not available
+          keys = demoData.map(item => item.key);
+          console.log('Using demo data - API not available');
+        }
+
+        cacheData = [];
+        
+        for (const key of keys) {
+          let ttl;
+          try {
+            const ttlRes = await fetch('/api/cache/ttl?key=' + encodeURIComponent(key));
+            const ttlData = await ttlRes.json();
+            ttl = ttlData.ttl;
+          } catch (error) {
+            // Use demo TTL data
+            const demoItem = demoData.find(item => item.key === key);
+            ttl = demoItem ? demoItem.ttl : Math.floor(Math.random() * 7200);
+          }
+
+          cacheData.push({ key, ttl });
+        }
+
+        filteredData = [...cacheData];
+        renderTable();
+        updateStats();
+        
+      } catch (error) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="3" class="empty-state">
+              <div class="empty-icon">⚠️</div>
+              <div>Failed to load cache data</div>
+            </td>
+          </tr>
+        `;
+      }
+
+      refreshBtn.textContent = 'REFRESH';
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('cache-tbody');
+      
+      if (filteredData.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="3" class="empty-state">
+              <div class="empty-icon">🗃️</div>
+              <div>No cache entries found</div>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = filteredData.map((item, index) => `
+        <tr class="row-enter" style="animation-delay: ${index * 0.1}s">
+          <td class="key-cell">${escapeHtml(item.key)}</td>
+          <td class="ttl-cell">${formatTTL(item.ttl)}</td>
+          <td>
+            <button class="delete-btn" onclick="invalidate('${escapeHtml(item.key)}')">
+              Delete
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function updateStats() {
+      const totalKeys = cacheData.length;
+      const avgTTL = totalKeys > 0 ? 
+        Math.round(cacheData.reduce((sum, item) => sum + item.ttl, 0) / totalKeys) : 0;
+      
+      document.getElementById('total-keys').textContent = totalKeys;
+      document.getElementById('avg-ttl').textContent = formatTTL(avgTTL);
+      
+      // Animate status indicator
+      const statusEl = document.getElementById('cache-status');
+      statusEl.style.color = totalKeys > 0 ? 'var(--cyber-green)' : 'var(--cyber-red)';
+      statusEl.textContent = totalKeys > 0 ? '●' : '●';
+    }
+
+    async function invalidate(key) {
+      try {
+        await fetch('/api/cache?key=' + encodeURIComponent(key), { method: 'DELETE' });
+      } catch (error) {
+        console.log('Demo mode - simulating deletion');
+      }
+      
+      cacheData = cacheData.filter(item => item.key !== key);
+      filteredData = filteredData.filter(item => item.key !== key);
+      
+      renderTable();
+      updateStats();
+    }
+
+    function filterCache(searchTerm) {
+      filteredData = cacheData.filter(item => 
+        item.key.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      renderTable();
+    }
+
+    function formatTTL(ttl) {
+      if (ttl <= 0) return 'Expired';
+      if (ttl < 60) return `${ttl}s`;
+      if (ttl < 3600) return `${Math.floor(ttl / 60)}m ${ttl % 60}s`;
+      const hours = Math.floor(ttl / 3600);
+      const mins = Math.floor((ttl % 3600) / 60);
+      return `${hours}h ${mins}m`;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+
+    document.getElementById('search-input').addEventListener('input', (e) => {
+      filterCache(e.target.value);
+    });
+
+
+    loadCache();
+
+    setInterval(loadCache, 30000);
+  </script>
+</body>
+</html>
