@@ -42,5 +42,6 @@ jobs:
           tags: ${{ secrets.DOCKER_USERNAME }}/caching-proxy:latest
 
       - name: ✅ Image pushed successfully
-        run: echo '✅ Docker image pushed to DockerHub: https://hub.docker.com/r/${{ secrets.DOCKER_USERNAME }}/caching-proxy'
-
+        run: echo "✅ Docker image pushed to DockerHub: https://hub.docker.com/r/$DOCKER_USERNAME/caching-proxy"
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
